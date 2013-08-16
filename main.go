@@ -93,23 +93,10 @@ func main() {
 	}
 	defer seq.Close()
 
-	port, err := seq.CreatePort("Listener", alsa.PORT_CAP_WRITE|alsa.PORT_CAP_SUBS_WRITE)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = seq.Connect(seq.Port(0, 1), port)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	if *info {
 		seq.Dump()
-	}
-
-	if *csvFile != "" {
+	} else if *csvFile != "" {
 		connector := NewConnector(seq)
-		//connector.AddPair("UM-2G MIDI 1", "UM-2G MIDI 2")
 		err = connector.ReadPairsCsv(*csvFile)
 		if err != nil {
 			log.Fatal("Cannot read csv file: ", err)
@@ -117,6 +104,16 @@ func main() {
 		connector.ConnectPossible()
 
 		if *keepRunning {
+			port, err := seq.CreatePort("Listener", alsa.PORT_CAP_WRITE|alsa.PORT_CAP_SUBS_WRITE)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			err = seq.Connect(seq.Port(0, 1), port)
+			if err != nil {
+				log.Fatal(err)
+			}
+
 			ch := make(chan alsa.SeqEventType)
 			go seq.EventLoop(ch)
 
